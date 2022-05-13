@@ -7,8 +7,4 @@
 # new environment variables
 
 # modified environment variables
-export CMAKE_PREFIX_PATH="/home/sijt/ISBEP/Arm_system/agrobot_ws/devel:$CMAKE_PREFIX_PATH"
-export LD_LIBRARY_PATH="/home/sijt/ISBEP/Arm_system/agrobot_ws/devel/lib:$LD_LIBRARY_PATH"
 export PWD='/home/sijt/ISBEP/Arm_system/agrobot_ws/build'
-export ROSLISP_PACKAGE_DIRECTORIES='/home/sijt/ISBEP/Arm_system/agrobot_ws/devel/share/common-lisp'
-export ROS_PACKAGE_PATH="/home/sijt/agrobot_ws/src:/home/sijt/ISBEP/Arm_system/agrobot_ws/src:$ROS_PACKAGE_PATH"

@@ -1,2 +1,2 @@
-vision
+detection:vision
 -DCATKIN_DEVEL_PREFIX=/home/sijt/ISBEP/Arm_system/agrobot_ws/devel -DCMAKE_INSTALL_PREFIX=/home/sijt/ISBEP/Arm_system/agrobot_ws/install -G Unix Makefiles
