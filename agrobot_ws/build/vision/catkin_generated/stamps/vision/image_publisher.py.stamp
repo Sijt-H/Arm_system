@@ -5,7 +5,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 
-cap = cv2.VideoCapture(0) #2 = webcam, 0 = front facing camera
+cap = cv2.VideoCapture(2) #2 = webcam, 0 = front facing camera
 print(cap.isOpened())
 bridge = CvBridge()
 
