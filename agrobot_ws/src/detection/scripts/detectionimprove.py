@@ -56,8 +56,8 @@ def detection(image):
     AddCircles(circles, image)
     AddCircles(circles_blur, image_processed)
     #show detected image
-    #cv2.imshow("Grayscale", grayscale)
-    cv2.imshow("Detection_blur", image_processed)
+    cv2.imshow("Grayscale", undist)
+    #cv2.imshow("Detection_blur", image_processed)
     cv2.imshow("Detection normal",image)
     cv2.waitKey(3)
 
