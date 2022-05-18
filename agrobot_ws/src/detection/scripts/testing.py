@@ -6,6 +6,12 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import numpy as np
 
+savedir = "/home/sijt/ISBEP/Arm_system/agrobot_ws/src/detection/scripts/camera_data/"
+
+cam_mtx=np.load(savedir+'cam_mtx.npy')
+dist=np.load(savedir+'dist.npy')
+newcam_mtx=np.load(savedir+'newcam_mtx.npy')
+
 def ImageProcessing(frame):
     #add blur
     frame_mblur= cv2.medianBlur(frame, 7)
@@ -38,11 +44,16 @@ def AddCircles(circles, image):
             cv2.circle(image, (x, y), r, (0, 255, 0), 4)
             cv2.rectangle(image, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
 
-def detection(image):
-    image_processed = ImageProcessing(image)
-    grayscale_blur = cv2.cvtColor(image_processed, cv2.COLOR_BGR2GRAY)
-    grayscale= cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+def Undistort(image):
+    undistorted = cv2.undistort(image, cam_mtx, dist, None, newcam_mtx)
 
+    return undistorted
+
+def detection(image):
+    #image_processed = ImageProcessing(image)
+    #grayscale_blur = cv2.cvtColor(image_processed, cv2.COLOR_BGR2GRAY)
+    #grayscale= cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    undistorted = Undistort(image)
     #tune param
     
     dp = 1.2
@@ -51,12 +62,13 @@ def detection(image):
     param2 = 80
     minrad = 30
     maxrad = 200
-    circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
-    circles_blur = FindCircles(grayscale_blur,dp,mindist,param1,param2,minrad,maxrad)
-    AddCircles(circles, image)
-    AddCircles(circles_blur, image_processed)
+    #circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
+    #circles_blur = FindCircles(grayscale_blur,dp,mindist,param1,param2,minrad,maxrad)
+    #AddCircles(circcles, image)
+    #AddCircles(circles_blur, image_processed)
     #show detected image
-    cv2.imshow("Grayscale", undist)
+    cv2.imshow("Undistorted", undistorted)
+    #cv2.imshow("Grayscale", grayscale)
     #cv2.imshow("Detection_blur", image_processed)
     cv2.imshow("Detection normal",image)
     cv2.waitKey(3)
