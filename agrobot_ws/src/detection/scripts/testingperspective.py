@@ -11,9 +11,6 @@ savedir = "/home/sijt/ISBEP/Arm_system/agrobot_ws/src/detection/scripts/camera_d
 cam_mtx=np.load(savedir+'cam_mtx.npy')
 dist=np.load(savedir+'dist.npy')
 newcam_mtx=np.load(savedir+'newcam_mtx.npy')
-cx = int(newcam_mtx[0,2])
-cy = int(newcam_mtx[1,2])
-
 
 def ImageProcessing(frame):
     #add blur
@@ -90,7 +87,6 @@ def detection(image):
     maxrad = 200
     global circles 
     circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
-    print(circles)
     #circles_blur = FindCircles(grayscale_blur,dp,mindist,param1,param2,minrad,maxrad)
     AddCircles(circles, image)
     #AddCircles(circles_blur, image_processed)
@@ -102,18 +98,17 @@ def detection(image):
     cv2.waitKey(3)
 
 def callback(image_ROS):
-    #pub = rospy.Publisher('/circles', Image, queue_size = 1) #publish circles as image
+    pub = rospy.Publisher('/circles', Image, queue_size = 1) #publish circles as image
     bridge = CvBridge()
     image = bridge.imgmsg_to_cv2(image_ROS, desired_encoding = 'passthrough')
-    #detection(image)
-    #testing sending the circles array as image
-    #if circles is not None:
-    #    print(np.shape(circles))
-    #    print(type(circles[0,1]))
-    #    print(circles)
-    #    msg = bridge.cv2_to_imgmsg(circles, 'mono16') #convert image to ROS image
-    #    #try:t
-    #    #    tpub.publish(msg)
+    detection(image)
+    if circles is not None:
+        print(np.shape(circles))
+        print(type(circles[0,1]))
+        print(circles)
+        msg = bridge.cv2_to_imgmsg(circles, 'mono16') #convert image to ROS image
+        #try:t
+        #    tpub.publish(msg)
 
 def listener():
     rospy.init_node("Detection_improved", anonymous = False)
