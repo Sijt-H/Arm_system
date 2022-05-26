@@ -7,3 +7,6 @@ Hoogte:
 48.5cm
 bereik:
 30.5x43.5 > A3
+
+Hoogte nu 50cm
+

@@ -23,30 +23,33 @@ fx = cam_mtx[0,0]
 fy = cam_mtx[1,1]
 
 #XYZ at world position of cx,cy
-X_center=10.9
-Y_center=10.7
-Z_center=43.4
-worldPoints=np.array([[X_center,Y_center,Z_center],
-                       [5.5,3.9,46.8],
-                       [14.2,3.9,47.0],
-                       [22.8,3.9,47.4],
-                       [5.5,10.6,44.2],
-                       [14.2,10.6,43.8],
-                       [22.8,10.6,44.8],
-                       [5.5,17.3,43],
-                       [14.2,17.3,42.5],
-                       [22.8,17.3,44.4]], dtype=np.float32)
+X_center=21.9
+Y_center=14.0
+Z_center=51.0
+worldPoints=np.array([[X_center,Y_center,Z_center], #measured 1 to 9
+                       [11.9,6.0,52.0],
+                       [23.9,6.2,51.8],
+                       [35.9,6.5,53.4],
+                       [12.0,15.3,51.4],
+                       [24.0, 15.5, 50.4],
+                       [36.0, 15.0,53.4],
+                       [11.5,24.5,52.5],
+                       [23.6,24.9,52.3],
+                       [35.6,24.9,54.6]], dtype=np.float32)
 
 imagePoints=np.array([[cx,cy],
-                       [502,185],
-                       [700,197],
-                       [894,208],
-                       [491,331],
-                       [695,342],
-                       [896,353],
-                       [478,487],
-                       [691,497],
-                       [900,508]], dtype=np.float32)
+                       [395,202],
+                       [736,209],
+                       [1075,217],
+                       [393,467],
+                       [729,476],
+                       [1063,481],
+                       [398,724],
+                       [724,730],
+                       [1052,737]], dtype=np.float32)
+
+                
+
 
 retva, rvec, tvec = cv2.solvePnP(worldPoints, imagePoints,cam_mtx, dist)
 R, jacobian = cv2.Rodrigues(rvec)
@@ -113,6 +116,7 @@ coord = np.empty((0,3),dtype=np.float32)
 
 
 print("----Calculation with s_best---------")
+print("Best s = ", s_best)
 for i in range(0,np.size(imagePoints,0)):    
     coord = np.append(coord, calcXYZalt(s_best, imagePoints[i,0], imagePoints[i,1]), axis=0)
     #coord_alt = np.append(coord_alt, calcXYZalt(s_mean, imagePoints[i,0], imagePoints[i,1]), axis=0)
@@ -130,4 +134,15 @@ print("Mean error error [-]", np.mean(error_abs, axis=0))
 #print("Mean error error [-]", np.mean(error_alt, axis=0))
 
 
+#Performance test:
+coordinate = calcXYZalt(s_best, 241,237) 
+#real = 6.6, 7.3
+print("Testcoordinate: ",coordinate)
 
+coordinate = calcXYZalt(s_best, 233,700)
+print("Testcoordinate 2: ",coordinate) 
+#6.2, 23.8
+
+coordinate = calcXYZalt(s_best,931,577)
+print("Testcoordinate 3: ",coordinate) 
+#31.0, 18.5
