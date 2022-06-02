@@ -8,7 +8,7 @@
 #define motorInterfaceType 1 //Easy driver interface
 AccelStepper platform = AccelStepper(motorInterfaceType, stepPin, dirPin);
 #define home_switch 9 //Micro-switch used for homing the platform
-
+#define BAUD 57600
 std_msgs::UInt16 led_msg;
 ros::NodeHandle nh;
 
@@ -17,8 +17,14 @@ int move_finished=1;  // Used to check if move is completed
 long initial_homing=-1;  // Used to Home Stepper at startup
 int steps = 200; // Steps per full revolution, step angle NEMA17 = 1.8 deg -> 200 steps per 360 deg
 
-void subscriberCallback(const std_msgs::UInt16& led_msg){
-  //Do stuff based on input
+void subscriberCallback(const std_msgs::UInt16& led_msg) {
+  if (led_msg.data  == 1) {
+    StepperHoming();
+    nh.loginfo("Werkt gewoon nie zeike");
+   
+  } else {
+    nh.loginfo("Value other than 1");
+  }
 }
 
 ros::Subscriber<std_msgs::UInt16> led_subscriber("toggle_led", &subscriberCallback);
@@ -56,9 +62,10 @@ void setup()
 {
   delay(1000);
   pinMode(home_switch, INPUT_PULLUP);
-  StepperHoming(); //Initial homing using the micro-switch
+  //StepperHoming(); //Initial homing using the micro-switch
   platform.setMaxSpeed(1000.0);      // Max stepper speed
   platform.setAcceleration(1000.0);  // Max stepper acc
+  nh.getHardware()->setBaud(BAUD);
   nh.initNode();
   nh.subscribe(led_subscriber);
 

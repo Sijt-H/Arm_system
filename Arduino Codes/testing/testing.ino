@@ -1,53 +1,45 @@
-#include <AccelStepper.h>
- 
-// Define stepper motor connections and motor interface type. Motor interface type must be set to 1 when using a driver:
-#define dirPin 2
-#define stepPin 3
-#define motorInterfaceType 1
- 
-// Create a new instance of the AccelStepper class:
-AccelStepper stepper = AccelStepper(motorInterfaceType, stepPin, dirPin);
- 
-void setup() {
-  // Set the maximum speed in steps per second:
-  stepper.setMaxSpeed(1000);
+#include <ros.h>
+#include <std_msgs/String.h>
+#include <std_msgs/UInt16.h>
+
+#define BUTTON 8
+#define LED 13
+ros::NodeHandle node_handle;
+
+std_msgs::String button_msg;
+std_msgs::UInt16 led_msg;
+
+void subscriberCallback(const std_msgs::UInt16& led_msg) {
+  if (led_msg.data  == 1) {
+    node_handle.loginfo("Werkt gewoon nie zeike");
+    digitalWrite(LED, HIGH); 
+  } else {
+    digitalWrite(LED, LOW);
+  }
 }
- 
-void loop() 
+
+ros::Publisher button_publisher("button_press", &button_msg);
+ros::Subscriber<std_msgs::UInt16> led_subscriber("toggle_led", &subscriberCallback);
+
+void setup()
+{
+  pinMode(LED, OUTPUT);
+  pinMode(BUTTON, INPUT);
+  node_handle.initNode();
+  node_handle.advertise(button_publisher);
+  node_handle.subscribe(led_subscriber);
+}
+
+void loop()
 { 
-  // Set the current position to 0:
-  stepper.setCurrentPosition(0);
- 
-  // Run the motor forward at 200 steps/second until the motor reaches 400 steps (2 revolutions):
-  while(stepper.currentPosition() != 400)
-  {
-    stepper.setSpeed(200);
-    stepper.runSpeed();
+  if (digitalRead(BUTTON) == HIGH) {
+    button_msg.data = "Pressed";
+  } else {
+    button_msg.data = "NOT pressed";
   }
- 
-  delay(1000);
- 
-  // Reset the position to 0:
-  stepper.setCurrentPosition(0);
- 
-  // Run the motor backwards at 600 steps/second until the motor reaches -200 steps (1 revolution):
-  while(stepper.currentPosition() != -200) 
-  {
-    stepper.setSpeed(-600);
-    stepper.runSpeed();
-  }
- 
-  delay(1000);
- 
-  // Reset the position to 0:
-  stepper.setCurrentPosition(0);
- 
-  // Run the motor forward at 400 steps/second until the motor reaches 600 steps (3 revolutions):
-  while(stepper.currentPosition() != 600)
-  {
-    stepper.setSpeed(400);
-    stepper.runSpeed();
-  }
- 
-  delay(3000);
+
+  button_publisher.publish( &button_msg );
+  node_handle.spinOnce();
+  
+  delay(100);
 }
