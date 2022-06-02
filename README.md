@@ -1,3 +1,12 @@
+#DISCLAIMER
+I am not responsible for any damages or injury as a result of using this system. 
+The PSU has the potential to be lethal if misused.
+
+Double check your work and proceed with care!
+
+
+
+
 # Arm_system
 System: Ubuntu 20.04 (running as dualboot not in a VM), ROS Noetic
 ## Packages
@@ -27,6 +36,9 @@ Correct the load directory `loaddir` in `mapping.py`
 #### Mapping
 The mapping calculates the optimal scaling factor "s" for the image and world points that are measured. Using the intrinsic camera parameters: camera matrix and distortion matrix, the image coordinates can be mapped to world coordinates. 
 
+## Arduino
+The Arduino Mega is connected to the stepper driver (A4988) and controls it using two outputs, STEP and DIR.
+
 ## Running with ROS
 Complete the following commands to run the system using ROS.
 
@@ -37,8 +49,8 @@ roscore
 rosrun vision image_publisher.py
 rosrun detection detection.py
 rosrun detection mapping.py
+rosrun rosserial_python serial_node.py /dev/ttyACM0
 ```
-
 
 
 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
