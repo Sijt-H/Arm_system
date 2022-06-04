@@ -25,17 +25,17 @@ void subscriberCallback() {
     break;
     
   case 1:
-    MoveToPixel(input);
+    MoveToPixel();
     MoveToCrop();
     break;
     
      case 2:
-    MoveToPixel(input);
+    MoveToPixel();
     MoveToCrop();
     break;
     
      case 3:
-    MoveToPixel(input);
+    MoveToPixel();
     MoveToCrop();
     break;
     
@@ -63,7 +63,7 @@ void MoveToCrop(){ //Moves the platform to the crop, based on the output of the 
   Serial.println(cropX);
   Serial.println(" ");
   if(cropX>platformRange){
-    println("X-coordinate out of bounds");
+    Serial.println("X-coordinate out of bounds");
     }
   
   }
