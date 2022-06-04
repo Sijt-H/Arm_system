@@ -11,6 +11,7 @@ AccelStepper platform = AccelStepper(motorInterfaceType, stepPin, dirPin);
 #define BAUD 57600
 std_msgs::UInt16 led_msg;
 ros::NodeHandle nh;
+int message; 
 
 // Globals
 int move_finished=1;  // Used to check if move is completed
@@ -18,10 +19,10 @@ long initial_homing=-1;  // Used to Home Stepper at startup
 int steps = 200; // Steps per full revolution, step angle NEMA17 = 1.8 deg -> 200 steps per 360 deg
 
 void subscriberCallback(const std_msgs::UInt16& led_msg) {
+  message = led_msg.data;
   if (led_msg.data  == 1) {
     StepperHoming();
-    nh.loginfo("Werkt gewoon nie zeike");
-   
+  
   } else {
     nh.loginfo("Value other than 1");
   }
@@ -29,9 +30,8 @@ void subscriberCallback(const std_msgs::UInt16& led_msg) {
 
 ros::Subscriber<std_msgs::UInt16> led_subscriber("toggle_led", &subscriberCallback);
 
-
-
 void StepperHoming(){
+  nh.loginfo("Starting Homing sequence");
   platform.setAcceleration(200.0);
   platform.setMaxSpeed(200.0);
   //Start Homing
@@ -55,7 +55,7 @@ void StepperHoming(){
   }
   
   platform.setCurrentPosition(0); //Location where the switch is just deactivated
-
+  nh.loginfo("Finished Homing");
 }
 
 void setup()
@@ -65,7 +65,7 @@ void setup()
   //StepperHoming(); //Initial homing using the micro-switch
   platform.setMaxSpeed(1000.0);      // Max stepper speed
   platform.setAcceleration(1000.0);  // Max stepper acc
-  nh.getHardware()->setBaud(BAUD);
+  //nh.getHardware()->setBaud(BAUD);
   nh.initNode();
   nh.subscribe(led_subscriber);
 
