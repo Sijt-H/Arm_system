@@ -1,19 +1,21 @@
 #include <AccelStepper.h>
-
+#include <math.h>
 #define dirPin 2 //Digital output pin
 #define stepPin 3 //Digital output pin
 #define motorInterfaceType 1 //Easy driver interface
 AccelStepper platform = AccelStepper(motorInterfaceType, stepPin, dirPin);
 #define home_switch 9 //Micro-switch used for homing the platform
+#define revolution 200 // Steps per full revolution, step angle NEMA17 = 1.8 deg -> 200 steps per 360 deg
+#define radius 0.62 //Radius [cm] of the pulley mounted on the NEMA17, r = 2*d
+
 
 // Globals
 int move_finished = 1; // Used to check if move is completed
 long initial_homing = -1; // Used to Home Stepper at startup
-int steps = 200; // Steps per full revolution, step angle NEMA17 = 1.8 deg -> 200 steps per 360 deg
 int input;
-int cropX;
-int platformRange = 6000; //Maximum travel range of the platfrom from homing position
-int PixelX[] = {30,80,2000}; //X-coordinate of pixels ([0] = Pixel 1 (most leftern pixel), [1] = Pixel 2 (middle pixel), [2] = Pixel 3 (closest to homing position))
+float cropX;
+int platformRange = 6000; //Maximum steps travel range of the platfrom from homing position
+float PixelX[] = {0.15,0.5,0.9}; //X-coordinate of pixels [cm] ([0] = Pixel 1 (most leftern pixel), [1] = Pixel 2 (middle pixel), [2] = Pixel 3 (closest to homing position))
 //fix: convert to steps
 
 
@@ -46,38 +48,57 @@ void subscriberCallback() {
 }
 }
 
+int Conversion(float X){
+  // 100cm = 5030 steps // gemeten van 0 punt tot rechter punt platform.
+  //Conversion of X coordinates [cm] to number of steps [-]
+  int steps;
+  int stepsperm = 5030; //lmao
+  steps = X*stepsperm;
+    Serial.print("Steps: ");
+  Serial.println(steps);
+  Serial.print("X: ");
+  Serial.println(X);
+  if(steps>6000){
+    Serial.print("Out of bounds, limit to frame");
+    return 5030;
+    }
+  else{
+    return steps;
+    }
+  }
+
 void MoveToPixel(){ //moves the platform to Pixel 1,2 or 3
   //temp:
   //platform.setSpeed(200);
   int pixel = input-1; //array index of pixel
-  platform.moveTo(PixelX[pixel]);
+  platform.moveTo(Conversion(PixelX[pixel]));
    platform.runToPosition();
   }
 
 void MoveToCrop(){ //Moves the platform to the crop, based on the output of the mapping.py script
   
-  Serial.println("Input the crop X-coordinate: ");
+  Serial.println("Input the crop X-coordinate [m]: ");
   while (Serial.available() == 0) {
     // Wait for input
   }
-  cropX = Serial.parseInt(); //user inputs a value. Simulates subscribing to a topic with ROS
-  
+  cropX = Serial.parseFloat(); //user inputs a value. Simulates subscribing to a topic with ROS
+  int stepX = Conversion(cropX);
   Serial.print("Crop coordinate: "); //feedback of chosen value
   Serial.println(cropX);
   Serial.println(" ");
-  if(cropX>platformRange){
+  if(stepX>platformRange||stepX<0){
     Serial.println("X-coordinate out of bounds");
     }
    else{
-      platform.moveTo(cropX);
+      platform.moveTo(stepX);
    platform.runToPosition();
       }
   
   }
 
 void StepperHoming() { //Function that does the homing sequence
-  platform.setAcceleration(200.0);
-  platform.setMaxSpeed(200.0);
+  platform.setAcceleration(300.0);
+  platform.setMaxSpeed(300.0);
   //Start Homing
   while (digitalRead(home_switch)) {  // Make the Stepper move CW until the switch is activated
     platform.moveTo(initial_homing);  // Set the position to move to

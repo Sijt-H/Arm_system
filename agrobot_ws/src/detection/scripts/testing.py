@@ -166,17 +166,17 @@ def detection(image):
     #BlobDetection(image_processed)
     #tune param
     
-    dp = 1.2
-    mindist = 100
-    param1 = 100
-    param2 = 100
-    minrad = 40
-    maxrad = 250
+    dp = 1.4
+    mindist = 70
+    param1 = 80
+    param2 = 80
+    minrad = 80
+    maxrad = 300
     global circles 
     circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
     
     #circles_blur = FindCircles(grayscale_blur,dp,mindist,param1,param2,minrad,maxrad)
-    AddCircles(np.array([[cx,cy,20]]), image) #centre point
+    #AddCircles(np.array([[cx,cy,20]]), image) #centre point
     AddCircles(circles, image)
   
     if circles is not None:
