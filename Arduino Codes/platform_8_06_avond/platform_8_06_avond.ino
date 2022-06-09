@@ -27,15 +27,9 @@ bool homing_completed = false;
 int input;
 float cropX;
 float cropY;
+float PixelX[] = {15,50,90}; //X-coordinate of pixels [cm] ([0] = Pixel 1 (most leftern pixel), [1] = Pixel 2 (middle pixel), [2] = Pixel 3 (closest to homing position))
 float laserOffsetX = -1.5; //laser does not point straight down but at an angle. Offset is negative as the laser X is more than actual X (eg. platform to X=100cm -> laser measures at X=101.5cm)
-float laserOffsetY = 1.3; //positive offset
-float homingOffsetX = -1.1; //distance from X-axis homing position to frame X
-float homingOffsetY = -1.9; //distance from Y-axis homing position to frame Y
-float platformOffsetX = -10; //witdh of platform /2
-float lasermountOffsetY = -1.3; //width of laser mount /2
-float PixelX[] = {15,50 - (laserOffsetX+homingOffsetX+platformOffsetX) ,90}; //X-coordinate of pixels [cm] ([0] = Pixel 1 (most leftern pixel), [1] = Pixel 2 (middle pixel), [2] = Pixel 3 (closest to homing position))
-
-//PixelX[1]=PixelX[1] - (laserOffsetX+homingOffsetX+platformOffsetX);
+float laserOffsetY = 1.2; //positive offset
 
 //Function name is kept as it is in ROS
 void subscriberCallback() {
@@ -82,16 +76,15 @@ void subscriberCallback() {
 }
 }
 int ConversionY(float Y){
-  // 100cm = 5004 steps // measured from homed 0 point to right side of the platform
-  // 
-  //ConversionX of X coordinates [cm] to number of steps [-], for the laser to be at Y
+  // 100cm = 50004 steps // measured from homed 0 point to right side of the platform
+  //ConversionX of X coordinates [cm] to number of steps [-]
   int steps;
   int stepsperm = 5004; //lmao
-  steps = (Y+laserOffsetY+homingOffsetY+lasermountOffsetY)/100*stepsperm;
+  steps = Y/100*stepsperm;
     Serial.print("Steps: ");
   Serial.println(steps);
   
-  if(steps>platformRange || steps<0){
+  if(steps>platformRange){
     Serial.print("Out of bounds, limit to frame");
     return 0;
     }
@@ -102,16 +95,16 @@ int ConversionY(float Y){
 
 int ConversionX(float X){
   // 100cm = 5030 steps // measured from homed 0 point to right side of the platform
-  //ConversionX of X coordinates [cm] to number of steps [-], for the laser to be at X
+  //ConversionX of X coordinates [cm] to number of steps [-]
   int steps;
   int stepsperm = 5004; //lmao
-  steps = (X+laserOffsetX+homingOffsetX+platformOffsetX)/100*stepsperm;
+  steps = X/100*stepsperm;
     Serial.print("Steps: ");
   Serial.println(steps);
   
-  if(steps>platformRange || steps<0){
+  if(steps>platformRange){
     Serial.print("Out of bounds, limit to frame");
-    return 2000;
+    return 5030;
     }
   else{
     return steps;

@@ -24,7 +24,7 @@ fy = cam_mtx[1,1]
 X_center=67.0
 Y_center=15.3
 Z_center=43.5
-worldPoints=np.array([[X_center,Y_center,Z_center], #measured 1 to 9
+worldPoints=np.array([[X_center,Y_center+1.3,Z_center], #measured 1 to 9, calibration 08/06/2022, frame flat on ground, no motors
                        [80.1,6.7,47.0],
                        [67.9,6.8,47.0],
                        [56.0,6.8,45.0],
@@ -34,6 +34,9 @@ worldPoints=np.array([[X_center,Y_center,Z_center], #measured 1 to 9
                        [80.1,25.4,45.0],
                        [67.9,25.5,43.5],
                        [56.0, 25.5,45.5]], dtype=np.float32)
+
+worldPoints = worldPoints - np.array([[0,1.3,0]]) #correction for the circle radius, as the outer part of the circle was measured, not the center point, iam = 2.6cm
+worldPoints = worldPoints - np.array([[0,4,0]]) #offset for Y-axis measuring point. Offset is the size of 1 frame part, 40mm
 
 imagePoints=np.array([[cx,cy],
                        [246,122],
@@ -47,6 +50,9 @@ imagePoints=np.array([[cx,cy],
                        [1032,734]], dtype=np.float32)
 
                 
+pixel = input("Give pixel number: ") #pixel location
+pixel_loc = np.array([[15, 50, 90]]) #pixel location of Arduino code
+pixel_offset = np.array([[pixel_loc[0,(int(pixel)-1)]-50,0,0]]) #pixel offset
 
 
 retva, rvec, tvec = cv2.solvePnP(worldPoints, imagePoints,cam_mtx, dist)
@@ -81,6 +87,8 @@ def calcScaling():
     s[-1,0] = s_mean 
     #print("Mean s: ",s_mean)
     return s_mean, s
+
+
 def calcBestScaling(): #calculate coordinates from all scaling factors, find scaling factor with lowest error for all coordinate
     coord_alt = np.empty((np.size(imagePoints,0),3,np.size(s))) 
     error_alt = np.empty((np.size(imagePoints,0),3, np.size(s)))
@@ -145,52 +153,26 @@ def Undistort(image):
 
     return undistorted
 
-def BlobDetection(image, reversemask):
-    params = cv2.SimpleBlobDetector_Params()
-
-    params.filterByArea = True
-    params.minArea = 100
-
-    detector = cv2.SimpleBlobDetector_create(params)
-    keypoints = detector.detect(reversemask)
-
-    blank = np.zeros((1, 1))
-    blobs = cv2.drawKeypoints(image, keypoints, blank, (0, 0, 255),cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    cv2.imshow("Blobs Using Area", blobs)
 
 def detection(image):
-    #image_processed = ImageProcessing(image)
-    #grayscale_blur = cv2.cvtColor(image_processed, cv2.COLOR_BGR2GRAY)
     grayscale= cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    undistorted = Undistort(image)
-    #BlobDetection(image_processed)
-    #tune param
     
     dp = 1.4
     mindist = 80
     param1 = 80
     param2 = 80
-    minrad = 30
+    minrad = 40
     maxrad = 200
     global circles 
     circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
-    
-    #circles_blur = FindCircles(grayscale_blur,dp,mindist,param1,param2,minrad,maxrad)
-    #AddCircles(np.array([[cx,cy,20]]), image) #centre point
-    #AddCircles(np.array([[300,cy,20]]), image) #centre point
-    #AddCircles(np.array([[1000,cy,20]]), image) #centre point
     AddCircles(circles, image)
   
     if circles is not None:
         XYZ = calcXYZalt(s_best,circles[0,0], circles[0,1])
+        XYZ = XYZ + pixel_offset #offset the X value for the camera location on the frame
         print("Image coordinate: ","cX: ",circles[0,0],"cY: ", circles[0,1])      
         print("World Coordinate:", "X: ", XYZ[0,0],"Y: ", XYZ[0,1])
         print("---------------------------------------------------------------")
-    #AddCircles(circles_blur, image_processed)
-    #show detected image
-    #cv2.imshow("Undistorted", undistorted)
-    #cv2.imshow("Grayscale", grayscale)
-    #cv2.imshow("Detection_blur", image_processed)
     cv2.imshow("Detection",image)
     cv2.waitKey(3)
 
