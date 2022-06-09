@@ -100,6 +100,9 @@ def calcScaling():
 def calcBestScaling(): #calculate coordinates from all scaling factors, find scaling factor with lowest error for all coordinate
     coord_alt = np.empty((np.size(imagePoints,0),3,np.size(s))) 
     error_alt = np.empty((np.size(imagePoints,0),3, np.size(s)))
+    coord_sbest = np.empty((np.size(imagePoints,0),3))
+    error_rel_sbest = np.empty((np.size(imagePoints,0),3))
+    error_abs_sbest = np.empty((np.size(imagePoints,0),3))
     print("----Calculation with all s---------")
     for j in range(np.size(s)):
         for i in range(0,np.size(imagePoints,0)):    
@@ -111,9 +114,9 @@ def calcBestScaling(): #calculate coordinates from all scaling factors, find sca
 
     #calculate the error for every calibration point using s_best
     for i in range(0,np.size(imagePoints,0)):    
-        coord_sbest = calcXYZalt(s_best ,imagePoints[i,0], imagePoints[i,1])
-        error_rel_sbest = abs(coord_sbest - worldPoints)/worldPoints*100
-        error_abs_sbest = abs(coord_sbest - worldPoints)/worldPoints*100
+        coord_sbest[i,:] = calcXYZalt(s_best ,imagePoints[i,0], imagePoints[i,1])
+    error_rel_sbest = abs(coord_sbest - worldPoints)/worldPoints*100
+    error_abs_sbest = abs(coord_sbest - worldPoints)
     print("Relative Error using optimal s: ", error_rel_sbest)
     print("Absolute Error using optimal s: ", error_abs_sbest)
     np.savetxt(savedir+'cal_error_rel.txt', error_rel_sbest)

@@ -166,7 +166,7 @@ def detection(image):
 
     global logger
     grayscale= cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    dp = 1.3
+    dp = 1.4
     mindist = 300
     param1 = 80
     param2 = 80

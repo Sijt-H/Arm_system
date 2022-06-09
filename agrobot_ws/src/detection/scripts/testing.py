@@ -176,10 +176,10 @@ def detection(image):
     circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
     
     #circles_blur = FindCircles(grayscale_blur,dp,mindist,param1,param2,minrad,maxrad)
-    #AddCircles(np.array([[cx,cy,20]]), image) #centre point
-    #AddCircles(np.array([[300,cy,20]]), image) #centre point
-    #AddCircles(np.array([[1000,cy,20]]), image) #centre point
-    AddCircles(circles, image)
+    AddCircles(np.array([[cx,cy,20]]), image) #centre point
+    AddCircles(np.array([[300,cy,20]]), image) #centre point
+    AddCircles(np.array([[1000,cy,20]]), image) #centre point
+    #AddCircles(circles, image)
   
     if circles is not None:
         XYZ = calcXYZalt(s_best,circles[0,0], circles[0,1])
