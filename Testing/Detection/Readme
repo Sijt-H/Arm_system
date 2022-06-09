@@ -1,0 +1,15 @@
+10_seconds
+dp=1.4
+detectie alleen midden van wortel
+
+0-3:
+X50
+Y=15
+
+-----------------
+from 10 to 15 with lights off
+X=50
+Y=15
+
+16-20 lights on
+--------------------
