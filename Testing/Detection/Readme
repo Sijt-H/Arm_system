@@ -28,4 +28,4 @@ in automated map @50,22
 automated_2: carrot x=60 ,y=15
 test occasional FP at y=27, X80
 
-automated 3: zelfde als 2 maar geen FP
+automated 3: zelfde als 2 maar weinig FP, 1 per 2 seconden
