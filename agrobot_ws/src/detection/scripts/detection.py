@@ -27,11 +27,11 @@ def AddCircles(circles, image):
 def detection(image):
     grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     dp = 1.3
-    mindist = 300
+    mindist = 400
     param1 = 80
     param2 = 80
-    minrad = 50
-    maxrad = 300
+    minrad = 40
+    maxrad = 200
     circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
     AddCircles(circles, image)
 

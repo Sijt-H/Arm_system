@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from tracemalloc import start
 import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
@@ -8,7 +9,7 @@ import numpy as np
 import time
 
 loaddir="/home/sijt/ISBEP/Arm_system/agrobot_ws/src/detection/scripts/camera_data/"
-savedir="/home/sijt/ISBEP/Arm_system/Testing/Detection/"
+savedir="/home/sijt/ISBEP/Arm_system/Testing/Detection/Automated_3/"
 
 
 #Camera Parameters
@@ -55,7 +56,6 @@ imagePoints=np.array([[cx,cy],
                 
 #pixel = input("Give pixel number: ") #pixel location
 pixel = "2"
-test = input("Give test number: ") #pixel location
 pixel_loc = np.array([[15, 50, 90]]) #pixel location of Arduino code
 pixel_offset = np.array([[pixel_loc[0,(int(pixel)-1)]-50,0,0]]) #pixel offset
 
@@ -64,8 +64,9 @@ retva, rvec, tvec = cv2.solvePnP(worldPoints, imagePoints,cam_mtx, dist)
 R, jacobian = cv2.Rodrigues(rvec)
 Rt=np.column_stack((R,tvec))
 P = cam_mtx.dot(Rt)
-timing = "5" 
-timout = time.time() + int(timing )#timout after 10 seconds
+timing = [1,1,1,1,1,2,2,2,2,2,5,5,5,5,5,10,10,10,10,10,20,20,20,20,20]
+start_time = time.time() #timout after 10 seconds
+time_index = 0
 
 
 def calcXYZalt(s,u,v): #based on the FDXLabs method
@@ -165,29 +166,39 @@ def Undistort(image):
 def detection(image):
 
     global logger
+    global time_index
+    global current_time
+    global start_time
     grayscale= cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    dp = 1.4
-    mindist = 300
+    dp = 1.3
+    mindist = 400
     param1 = 80
     param2 = 80
-    minrad = 50
-    maxrad = 300
+    minrad = 40
+    maxrad = 200
     global circles 
     circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
     AddCircles(circles, image)
     
     if circles is not None:
-        XYZ = calcXYZalt(s_best,circles[0,0], circles[0,1])
-        XYZ = XYZ + pixel_offset #offset the X value for the camera location on the frame
-        logger = np.append(logger, XYZ, axis=0)
-        print("Image coordinate: ","cX: ",circles[0,0],"cY: ", circles[0,1])      
-        print("World Coordinate:", "X: ", XYZ[0,0],"Y: ", XYZ[0,1])
+        for i in range(np.shape(circles)[0]):
+            XYZ = calcXYZalt(s_best,circles[0,0], circles[0,1])
+            XYZ = XYZ + pixel_offset #offset the X value for the camera location on the frame
+            logger = np.append(logger, XYZ, axis=0)
+        #print("Image coordinate: ","cX: ",circles[0,0],"cY: ", circles[0,1])      
+        #print("World Coordinate:", "X: ", XYZ[0,0],"Y: ", XYZ[0,1])
         print("---------------------------------------------------------------")
-    if time.time()>timout:
-        np.savetxt(savedir+timing+'_seconds_'+test, logger)
+    if time.time()>(start_time + timing[time_index]):
+        np.savetxt(savedir+str(timing[time_index])+'_seconds_'+str(time_index)+".txt", logger)
         #print("File saved")
+        print("Test: ", time_index)
         print("Mean value [X,Y,Z]: ", np.mean(logger, axis=0))
-        rospy.signal_shutdown("testing complete")
+        
+        start_time = time.time()
+        time_index = time_index + 1
+        if time_index is len(timing):
+            rospy.signal_shutdown("Completed") #final thing is done
+        
     imS = cv2.resize(image, (800,600))                #
     cv2.imshow("Detection",imS)
     cv2.waitKey(3)
