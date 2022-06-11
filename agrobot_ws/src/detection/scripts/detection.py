@@ -32,8 +32,12 @@ def detection(image):
     param2 = 80
     minrad = 40
     maxrad = 200
-    circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
-    AddCircles(circles, image)
+    #circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
+    #AddCircles(circles, image)
+    AddCircles(np.array([[350,360,80]]), image) #centre point
+    AddCircles(np.array([[350,550,80]]), image) #centre point
+    AddCircles(np.array([[300,710,60]]), image) #centre point
+    AddCircles(np.array([[400,710,60]]), image) #centre point
 
     #show detected image
     cv2.imshow("Detected Image", image)
