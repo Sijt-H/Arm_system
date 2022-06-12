@@ -5,10 +5,13 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 
+#publish a single image on the image topic
+
 loaddir = "/home/sijt/ISBEP/Arm_system/Testing/Hough Circle Parameter/Images/"
-cap = cv2.imread(loaddir+"image_10.jpg")
+number = input("Input image number: ")
+cap = cv2.imread(loaddir+"image_" + number + ".jpg")
 bridge = CvBridge()
-frame = cv2.imread(loaddir+"image_10.jpg")
+frame = cap
 def talker():
     pub = rospy.Publisher('/image', Image, queue_size = 1) #create topic
     rospy.init_node('webcam', anonymous = False) #create node

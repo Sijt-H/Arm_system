@@ -64,10 +64,12 @@ retva, rvec, tvec = cv2.solvePnP(worldPoints, imagePoints,cam_mtx, dist)
 R, jacobian = cv2.Rodrigues(rvec)
 Rt=np.column_stack((R,tvec))
 P = cam_mtx.dot(Rt)
-timing = [1,1,1,1,1,2,2,2,2,2,5,5,5,5,5,10,10,10,10,10,20,20,20,20,20]
+timing = 2
 start_time = time.time() #timout after 10 seconds
 time_index = 0
-
+index = 0 #index for dp
+index_1 = 0 #param1 index
+index_2 = 0 #param2 index
 
 def calcXYZalt(s,u,v): #based on the FDXLabs method
     A_inv = np.linalg.inv(cam_mtx)
@@ -81,7 +83,6 @@ def calcXYZalt(s,u,v): #based on the FDXLabs method
     return XYZ.T 
 def calcScaling():
     s = np.empty([np.size(worldPoints,0)+1,1])
-
     for i in range(0,np.size(worldPoints,0)):
         #print("-----------", i, "------------")
         XYZ1 = np.array([[worldPoints[i,0], worldPoints[i,1], worldPoints[i,2],1 ]], dtype=np.float32) #(X,Y,Z,1)^T
@@ -116,29 +117,6 @@ s_mean, s = calcScaling() #calculate the scaling factor and return mean scaling 
 s_best = calcBestScaling()
 
 
-def ImageProcessing(frame):
-    #add blur
-    frame_mblur= cv2.medianBlur(frame, 7)
-    hsv = cv2.cvtColor(frame_mblur, cv2.COLOR_BGR2HSV)
-    lower = np.array([0,15,0]) #np.array([0,21,0])
-    upper = np.array([179,255,254]) #np.array([24,255,171])
-    #lower = np.array([0,0,0])
-    #upper = np.array([179,255,255])
-
-    #HSV_testing.jpg:
-    lower = np.array([0,40,0])
-    upper = np.array([48,255,254])
-
-    mask = cv2.inRange(hsv, lower, upper)
-    reversemask = 255 - mask
-    masked = cv2.bitwise_and(frame,frame, mask= mask)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
-    masked = cv2.morphologyEx(masked, cv2.MORPH_CLOSE, kernel)
-    cv2.imshow("Masked", reversemask)
-    BlobDetection(frame, reversemask)
-    #return masked
-    return masked
-
 def FindCircles(grayscale,dp,mindist,par1,par2,minrad,maxrad):
     # detect circles in the image
     circles = cv2.HoughCircles(grayscale, cv2.HOUGH_GRADIENT,dp,mindist,param1=par1,param2=par2,minRadius=minrad,maxRadius=maxrad)
@@ -157,65 +135,92 @@ def AddCircles(circles, image):
             cv2.circle(image, (x, y), r, (0, 255, 0), 4)
             cv2.rectangle(image, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), 1) #thickness -1
 
-def Undistort(image):
-    undistorted = cv2.undistort(image, cam_mtx, dist, None, newcam_mtx)
-
-    return undistorted
-
 
 def detection(image):
-
-    global logger
-    global time_index
-    global current_time
-    global start_time
-    grayscale= cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    dp = 1.3
-    mindist = 400
-    param1 = 80
+    original = image.copy()
+    global index
+    global index_1
+    global index_2
+    dp = 1.2
+    param1 = 50
     param2 = 80
-    minrad = 40
-    maxrad = 200
-    global circles 
-    circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
-    AddCircles(circles, image)
+    grayscale= cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    grayscale = cv2.GaussianBlur(grayscale,(3,3),cv2.BORDER_DEFAULT)
     
-    if circles is not None:
-        for i in range(np.shape(circles)[0]):
-            XYZ = calcXYZalt(s_best,circles[0,0], circles[0,1])
-            XYZ = XYZ + pixel_offset #offset the X value for the camera location on the frame
-            logger = np.append(logger, XYZ, axis=0)
-        #print("Image coordinate: ","cX: ",circles[0,0],"cY: ", circles[0,1])      
-        #print("World Coordinate:", "X: ", XYZ[0,0],"Y: ", XYZ[0,1])
-        print("---------------------------------------------------------------")
-    if time.time()>(start_time + timing[time_index]):
-        np.savetxt(savedir+str(timing[time_index])+'_seconds_'+str(time_index)+".txt", logger)
-        #print("File saved")
-        print("Test: ", time_index)
-        print("Mean value [X,Y,Z]: ", np.mean(logger, axis=0))
+    #smooth to reduce noise a bit more
+    mindist = 300
+    minrad = 50
+    maxrad = 130
+    
+    
+    
+    #changing params
+    dp_val = np.arange(1, 2.1, 0.1)
+    param1_val = np.arange(20, 300, 10)
+    param2_val = np.arange(20, 300, 10)
+
+    #for all test values of dp, param 1 and param 2
+    for i in range(np.size(dp_val)):
+        for j in range(np.size(param1_val)):
+            for k in range(np.size(param2_val)):
+                circles = FindCircles(grayscale,dp_val[i],mindist,param1_val[j],param2_val[k],minrad,maxrad)
+                print("Circles", circles)
+                print("Current value: (dp,param1,param2)", dp_val[i], param1_val[j], param2_val[k])
+                print("-------------------------")
+                if circles is not None:
+                    AddCircles(circles, image)
+                
+                cv2.imshow("Detection",image)
+                cv2.imshow("original",original)
+                cv2.waitKey(100)
+                image = original #reset the pictuer
+                print("reset")
+    #if index is not np.size(dp_val)-1:
         
-        start_time = time.time()
-        time_index = time_index + 1
-        if time_index is len(timing):
-            rospy.signal_shutdown("Completed") #final thing is done
+    #    dp = dp_val[index]
+    #    index = index+1
+    #elif index_1 is not np.size(param1_val)-1:
+    #    dp = 1.4
+    #    param2 = 100
+    #    param1 = int(param1_val[index_1])
+    #    index_1 = index_1 + 1
+    #else:
+    #    dp = 1.4
+    #    param1 = 100
+    #    param2 = param2_val[index_2]
+    #    index_2 = index_2 +1
+    #    if index_2 is np.size(param2_val):
+    #        rospy.signal_shutdown("Completed") #final thing is done
+
+    #global circles 
+    #circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
+    #canny = cv2.Canny(grayscale, param1, param2)
+    #AddCircles(circles, image)
+    #AddCircles(np.array([[500,500,40]]), image)
+    #AddCircles(np.array([[500,500,130]]), image)
+    #if circles is not None:
+    #    print("Image coordinate:", circles)      
         
-    imS = cv2.resize(image, (800,600))                #
-    cv2.imshow("Detection",imS)
-    cv2.waitKey(3)
+        
+    # print("dp:", dp)
+    # print("param1:", param1)
+    # print("param2", param2)
+    # print("---------------------------------------------------------------")
+    # cv2.imshow("Detection",image)
+    # cv2.imshow("Canny",canny)
+    # cv2.waitKey(50)
+    # # time.sleep(1)
+    # if index is np.size(dp_val)-1:
+    #     rospy.signal_shutdown("Completed") #final thing is done
+    #print("Test: ", index)
+    #if index is np.size(dp):
+    #    rospy.signal_shutdown("Completed") #final thing is done
 
 def callback(image_ROS):
     #pub = rospy.Publisher('/circles', Image, queue_size = 1) #publish circles as image
     bridge = CvBridge()
-    image = bridge.imgmsg_to_cv2(image_ROS, desired_encoding = 'passthrough')
-    detection(image)
-    #testing sending the circles array as image
-    #if circles is not None:
-    #    print(np.shape(circles))
-    #    print(type(circles[0,1]))
-    #    print(circles)
-    #    msg = bridge.cv2_to_imgmsg(circles, 'mono16') #convert image to ROS image
-    #    #try:t
-    #    #    tpub.publish(msg)
+    image_rec = bridge.imgmsg_to_cv2(image_ROS, desired_encoding = 'passthrough')
+    detection(image_rec)
 
 def listener():
     rospy.init_node("Detection_improved", anonymous = False)
