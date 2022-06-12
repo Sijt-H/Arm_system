@@ -13,8 +13,9 @@ number = input("Input image number: ")
 image = cv2.imread(loaddir+"image_" + number + ".jpg")
 original = cv2.imread(loaddir+"image_" + number + ".jpg")
 
-real_center = np.array([[370,405,50]]) #for picture 1
-
+#real_center = np.array([[370,405,50]]) #for picture 1
+real_center = np.array([[190,610,50]]) #picture 2
+#real_center = np.array([[660,650,50]]) #for picture 3
 def FindCircles(grayscale,dp,mindist,par1,par2,minrad,maxrad):
     # detect circles in the image
     circles = cv2.HoughCircles(grayscale, cv2.HOUGH_GRADIENT,dp,mindist,param1=par1,param2=par2,minRadius=minrad,maxRadius=maxrad)
