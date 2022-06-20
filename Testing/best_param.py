@@ -8,7 +8,8 @@ import time
 import math
 
 loaddir="/home/sijt/ISBEP/Arm_system/Testing/Hough Circle Parameter/Images/"
-savedir="/home/sijt/ISBEP/Arm_system/Testing/Hough Circle Parameter/"
+savedir="/home/sijt/ISBEP/Arm_system/Testing/Hough C2
+ircle Parameter/"
 number = input("Input image number: ")
 image = cv2.imread(loaddir+"image_" + number + ".jpg")
 original = cv2.imread(loaddir+"image_" + number + ".jpg")

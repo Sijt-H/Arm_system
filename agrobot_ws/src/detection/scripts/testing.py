@@ -35,6 +35,8 @@ worldPoints=np.array([[X_center,Y_center,Z_center], #measured 1 to 9
                        [67.9,25.5,43.5],
                        [56.0, 25.5,45.5]], dtype=np.float32)
 
+dz = 12
+
 imagePoints=np.array([[cx,cy],
                        [246,122],
                        [636,122],
@@ -169,8 +171,8 @@ def detection(image):
     dp = 1.2
     mindist = 80
     param1 = 80
-    param2 = 80
-    minrad = 30
+    param2 =70
+    minrad = 60
     maxrad = 200
     global circles 
     circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)

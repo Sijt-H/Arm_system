@@ -8,7 +8,7 @@ import numpy as np
 import time
 
 loaddir="/home/sijt/ISBEP/Arm_system/agrobot_ws/src/detection/scripts/camera_data/"
-savedir="/home/sijt/ISBEP/Arm_system/Testing/Detection/"
+savedir="/home/sijt/ISBEP/Arm_system/Testing/Detection error/"
 
 
 #Camera Parameters
@@ -109,7 +109,7 @@ def calcBestScaling(): #calculate coordinates from all scaling factors, find sca
             coord_alt[i,:,j] = calcXYZalt(s[j,0] ,imagePoints[i,0], imagePoints[i,1])
             error_alt[:,:,j] = abs(coord_alt[:,:,j] - worldPoints)/worldPoints*100
     error_alt_mean = np.mean(error_alt,axis=0) #row x column = #error: XYZ x s
-    s_best = np.argmax(error_alt_mean, axis=1) #indices for lowest error, for XYZ
+    s_best = np.argmin(error_alt_mean, axis=1) #indices for lowest error, for XYZ
     s_best = s[s_best[1],0] #the error in the Y coordinates is the highest so we pick the best s for Y coordinates
 
     #calculate the error for every calibration point using s_best
@@ -119,8 +119,9 @@ def calcBestScaling(): #calculate coordinates from all scaling factors, find sca
     error_abs_sbest = abs(coord_sbest - worldPoints)
     print("Relative Error using optimal s: ", error_rel_sbest)
     print("Absolute Error using optimal s: ", error_abs_sbest)
-    np.savetxt(savedir+'cal_error_rel_worst.txt', error_rel_sbest)
-    np.savetxt(savedir+'cal_error_abs_worst.txt', error_abs_sbest)
+    np.savetxt(savedir+'cal_error_rel.txt', error_rel_sbest)
+    np.savetxt(savedir+'cal_error_abs.txt', error_abs_sbest)
+    np.savetxt(savedir+'cal_XYZ.txt', coord_sbest)
     return s_best
 
 
