@@ -26,18 +26,15 @@ def AddCircles(circles, image):
 
 def detection(image):
     grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    dp = 1.6
+    dp = 1.2
     param1 = 70
     param2 = 50
     mindist = 300
     minrad = 61
     maxrad = 130
-    #circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
-    #AddCircles(circles, image)
-    #AddCircles(np.array([[350,360,80]]), image) #centre point
-    AddCircles(np.array([[190,610,50]]), image) #centre point
-    #AddCircles(np.array([[300,710,60]]), image) #centre point
-    #AddCircles(np.array([[400,710,60]]), image) #centre point
+    circles = FindCircles(grayscale,dp,mindist,param1,param2,minrad,maxrad)
+    AddCircles(circles, image)
+
 
     #show detected image
     cv2.imshow("Detected Image", image)

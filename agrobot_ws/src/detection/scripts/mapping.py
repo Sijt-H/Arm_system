@@ -52,7 +52,7 @@ imagePoints=np.array([[cx,cy],
                 
 pixel = input("Give pixel number: ") #pixel location
 pixel_loc = np.array([[15, 50, 90]]) #pixel location of Arduino code
-pixel_offset = np.array([[pixel_loc[0,(int(pixel)-1)]-50,0,0]]) #pixel offset
+pixel_offset = np.array([[pixel_loc[0,(int(pixel)-1)]-50,0,0]]) #pixel offset for XYZ
 
 
 retva, rvec, tvec = cv2.solvePnP(worldPoints, imagePoints,cam_mtx, dist)
@@ -60,7 +60,7 @@ R, jacobian = cv2.Rodrigues(rvec)
 Rt=np.column_stack((R,tvec))
 P = cam_mtx.dot(Rt)
 
-def calcXYZalt(s,u,v): #based on the FDXLabs method
+def calcXYZ(s,u,v): #based on the FDXLabs method
     A_inv = np.linalg.inv(cam_mtx)
     R_inv = np.linalg.inv(R)
     uv1 = np.array([[u,v,1]], dtype=np.float32)
@@ -70,6 +70,7 @@ def calcXYZalt(s,u,v): #based on the FDXLabs method
     XYZ_int2 = XYZ_int - tvec
     XYZ = R_inv.dot(XYZ_int2)
     return XYZ.T 
+    
 def calcScaling():
     s = np.empty([np.size(worldPoints,0)+1,1])
 
@@ -95,7 +96,7 @@ def calcBestScaling(): #calculate coordinates from all scaling factors, find sca
     print("----Calculation with all s---------")
     for j in range(np.size(s)):
         for i in range(0,np.size(imagePoints,0)):    
-            coord_alt[i,:,j] = calcXYZalt(s[j,0] ,imagePoints[i,0], imagePoints[i,1])
+            coord_alt[i,:,j] = calcXYZ(s[j,0] ,imagePoints[i,0], imagePoints[i,1])
             error_alt[:,:,j] = abs(coord_alt[:,:,j] - worldPoints)/worldPoints*100
     error_alt_mean = np.mean(error_alt,axis=0) #row x column = #error: XYZ x s
     s_best = np.argmin(error_alt_mean, axis=1) #indices for lowest error, for XYZ
@@ -107,28 +108,7 @@ s_mean, s = calcScaling() #calculate the scaling factor and return mean scaling 
 s_best = calcBestScaling()
 
 
-def ImageProcessing(frame):
-    #add blur
-    frame_mblur= cv2.medianBlur(frame, 7)
-    hsv = cv2.cvtColor(frame_mblur, cv2.COLOR_BGR2HSV)
-    lower = np.array([0,15,0]) #np.array([0,21,0])
-    upper = np.array([179,255,254]) #np.array([24,255,171])
-    #lower = np.array([0,0,0])
-    #upper = np.array([179,255,255])
 
-    #HSV_testing.jpg:
-    lower = np.array([0,40,0])
-    upper = np.array([48,255,254])
-
-    mask = cv2.inRange(hsv, lower, upper)
-    reversemask = 255 - mask
-    masked = cv2.bitwise_and(frame,frame, mask= mask)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
-    masked = cv2.morphologyEx(masked, cv2.MORPH_CLOSE, kernel)
-    cv2.imshow("Masked", reversemask)
-    BlobDetection(frame, reversemask)
-    #return masked
-    return masked
 
 def FindCircles(grayscale,dp,mindist,par1,par2,minrad,maxrad):
     # detect circles in the image
@@ -148,10 +128,7 @@ def AddCircles(circles, image):
             cv2.circle(image, (x, y), r, (0, 255, 0), 4)
             cv2.rectangle(image, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), 1) #thickness -1
 
-def Undistort(image):
-    undistorted = cv2.undistort(image, cam_mtx, dist, None, newcam_mtx)
 
-    return undistorted
 
 
 def detection(image):
@@ -168,7 +145,7 @@ def detection(image):
     AddCircles(circles, image)
   
     if circles is not None:
-        XYZ = calcXYZalt(s_best,circles[0,0], circles[0,1])
+        XYZ = calcXYZ(s_best,circles[0,0], circles[0,1])
         XYZ = XYZ + pixel_offset #offset the X value for the camera location on the frame
         print("Image coordinate: ","cX: ",circles[0,0],"cY: ", circles[0,1])      
         print("World Coordinate:", "X: ", XYZ[0,0],"Y: ", XYZ[0,1])
@@ -177,18 +154,10 @@ def detection(image):
     cv2.waitKey(3)
 
 def callback(image_ROS):
-    #pub = rospy.Publisher('/circles', Image, queue_size = 1) #publish circles as image
     bridge = CvBridge()
     image = bridge.imgmsg_to_cv2(image_ROS, desired_encoding = 'passthrough')
     detection(image)
-    #testing sending the circles array as image
-    #if circles is not None:
-    #    print(np.shape(circles))
-    #    print(type(circles[0,1]))
-    #    print(circles)
-    #    msg = bridge.cv2_to_imgmsg(circles, 'mono16') #convert image to ROS image
-    #    #try:t
-    #    #    tpub.publish(msg)
+   
 
 def listener():
     rospy.init_node("Detection_improved", anonymous = False)
